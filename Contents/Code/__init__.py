@@ -33,106 +33,106 @@ CH31NEWS_SUMMARY = "Live webcasts are available at the following times: \n\nMond
 ###################################################################################################
 def Start():
 
-	ObjectContainer.art = R(ART)
-	ObjectContainer.title1 = TITLE
+    ObjectContainer.art = R(ART)
+    ObjectContainer.title1 = TITLE
 
-	DirectoryObject.thumb = R(ICON)
-	VideoClipObject.thumb = R(ICON)
-	InputDirectoryObject.thumb = R(ICON)
-	PrefsObject.thumb = R(ICON)
-	NextPageObject.thumb = R(ICON)
+    DirectoryObject.thumb = R(ICON)
+    VideoClipObject.thumb = R(ICON)
+    InputDirectoryObject.thumb = R(ICON)
+    PrefsObject.thumb = R(ICON)
+    NextPageObject.thumb = R(ICON)
 
-	HTTP.CacheTime = 1
-	HTTP.Headers['User-Agent'] = "Mozilla/5.0 (iPhone; U; CPU iPhone OS 4_0 like Mac OS X; en-us) AppleWebKit/532.9 (KHTML, like Gecko) Version/4.0.5 Mobile/8A293 Safari/6531.22.7"
+    HTTP.CacheTime = 1
+    HTTP.Headers['User-Agent'] = "Mozilla/5.0 (iPhone; U; CPU iPhone OS 4_0 like Mac OS X; en-us) AppleWebKit/532.9 (KHTML, like Gecko) Version/4.0.5 Mobile/8A293 Safari/6531.22.7"
 
 ###################################################################################################
 @handler(PREFIX, TITLE, thumb=ICON, art=ART)
 def MainMenu():
 
-	oc = ObjectContainer()
+    oc = ObjectContainer()
 
-	oc.add(StreamfromLiveStreamAPI(CH2NEWS_LIVESTREAM_SUB, "2 News Live - KWGN", CH2NEWS_ICON, CH2NEWS_ART, CH2NEWS_SUMMARY))
-	oc.add(StreamM3U8("7 News Live - KMGH", CH7NEWS_ICON, CH7NEWS_ART, CH7NEWS_URL, CH7NEWS_SUMMARY))
-	oc.add(StreamM3U8("9 News Live - KUSA", CH9NEWS_ICON, CH9NEWS_ART, CH9NEWS_URL, CH9NEWS_SUMMARY))
-	oc.add(StreamfromLiveStreamAPI(CH31NEWS_LIVESTREAM_SUB, "Fox 31 News Live - KDVR", CH31NEWS_ICON, CH31NEWS_ART, CH31NEWS_SUMMARY))
+    oc.add(StreamfromLiveStreamAPI(CH2NEWS_LIVESTREAM_SUB, "2 News Live - KWGN", CH2NEWS_ICON, CH2NEWS_ART, CH2NEWS_SUMMARY))
+    oc.add(StreamM3U8("7 News Live - KMGH", CH7NEWS_ICON, CH7NEWS_ART, CH7NEWS_URL, CH7NEWS_SUMMARY))
+    oc.add(StreamM3U8("9 News Live - KUSA", CH9NEWS_ICON, CH9NEWS_ART, CH9NEWS_URL, CH9NEWS_SUMMARY))
+    oc.add(StreamfromLiveStreamAPI(CH31NEWS_LIVESTREAM_SUB, "Fox 31 News Live - KDVR", CH31NEWS_ICON, CH31NEWS_ART, CH31NEWS_SUMMARY))
 
-	return oc
+    return oc
 ###################################################################################################
 def StreamfromLiveStreamAPI(subId, title1, icon, art, summary, include_container=False):
-	url = getLiveStreamAPIURL(subId)
-	Log.Debug("****** FOUND livestream.com URL for %s at %s", subId, url)
-	return StreamM3U8(title1, icon, art, url, summary)
+    url = getLiveStreamAPIURL(subId)
+    Log.Debug("****** FOUND livestream.com URL for %s at %s", subId, url)
+    return StreamM3U8(title1, icon, art, url, summary)
 ###################################################################################################
 def StreamM3U8(title1, icon, art, url, summary, include_container=False):
-	stream = GetStreamURL(url)
-	vco = VideoClipObject(
-		key = Callback(StreamM3U8, title1=title1, icon=icon, art=art, url=url, summary=summary, include_container=True),
-		rating_key = url,
-		title = title1,
-		art = R(art),
-		thumb = R(icon),
-		summary = summary,
-		items = [
-			MediaObject(
-				optimized_for_streaming = True,                   
-				parts = [
-					PartObject(key=HTTPLiveStreamURL(url = stream))
-				]
-			)
-		]
-	)
+    stream = GetStreamURL(url)
+    vco = VideoClipObject(
+        key = Callback(StreamM3U8, title1=title1, icon=icon, art=art, url=url, summary=summary, include_container=True),
+        rating_key = url,
+        title = title1,
+        art = R(art),
+        thumb = R(icon),
+        summary = summary,
+        items = [
+            MediaObject(
+                optimized_for_streaming = True,                   
+                parts = [
+                    PartObject(key=HTTPLiveStreamURL(url = stream))
+                ]
+            )
+        ]
+    )
 
-	if include_container:
-		return ObjectContainer(objects=[vco])
-	else:
-		return vco
+    if include_container:
+        return ObjectContainer(objects=[vco])
+    else:
+        return vco
 ###################################################################################################
 def GetStreamURL(url):
-	content = HTTP.Request(url, cacheTime=1).content
-	buf = StringIO(content)
-	lines = buf.readlines()
-	best_bandwidth = 0L
-	best_url = '' 
-	for index, line in enumerate(lines):
-		bandwidth = getBandwidth(line)
-		if bandwidth > best_bandwidth:
-			best_bandwidth = bandwidth
-			best_url = lines[index + 1]
+    content = HTTP.Request(url, cacheTime=1).content
+    buf = StringIO(content)
+    lines = buf.readlines()
+    best_bandwidth = 0L
+    best_url = '' 
+    for index, line in enumerate(lines):
+        bandwidth = getBandwidth(line)
+        if bandwidth > best_bandwidth:
+            best_bandwidth = bandwidth
+            best_url = lines[index + 1]
 
-	if best_url != '':
-			Log.Debug("Streaming URL found = %s", best_url)
-			return best_url.rstrip()
-	Log.Error("Could not determine the stream from %s", url)
-	Log.Error("Content = %s", url)
-	return ""
+    if best_url != '':
+            Log.Debug("Streaming URL found = %s", best_url)
+            return best_url.rstrip()
+    Log.Error("Could not determine the stream from %s", url)
+    Log.Error("Content = %s", url)
+    return ""
 ###################################################################################################
 def getBandwidth(line):
-	params = ATTRIBUTELISTPATTERN.split(line.replace(ext_x_stream_inf + ':', ''))[1::2]
-	if len(params) <= 1:
-		return 0
+    params = ATTRIBUTELISTPATTERN.split(line.replace(ext_x_stream_inf + ':', ''))[1::2]
+    if len(params) <= 1:
+        return 0
 
-	for param in params:
-		if param.startswith('BANDWIDTH'):
-			name, value = param.split('=', 1)
-			return long(value)
+    for param in params:
+        if param.startswith('BANDWIDTH'):
+            name, value = param.split('=', 1)
+            return long(value)
 
-	return 0 
+    return 0 
 ###################################################################################################
 def normalize_attribute(attribute):
-	return attribute.replace('-', '_').lower().strip()
+    return attribute.replace('-', '_').lower().strip()
 ###################################################################################################
 def getLiveStreamAPIURL(id):
-	idObj = JSON.ObjectFromURL("http://api.new.livestream.com/accounts/" + id)
-	events = idObj["upcoming_events"]["data"]
-	eventId = getLiveStreamEventId(events)
-	Log.Info("******* ID = %s and EventID = %s",id,eventId)
-	eventObj = JSON.ObjectFromURL("http://api.new.livestream.com/accounts/" + id + "/events/" + str(eventId))
-	return eventObj["stream_info"]["m3u8_url"]
+    idObj = JSON.ObjectFromURL("http://api.new.livestream.com/accounts/" + id)
+    events = idObj["upcoming_events"]["data"]
+    eventId = getLiveStreamEventId(events)
+    Log.Info("******* ID = %s and EventID = %s",id,eventId)
+    eventObj = JSON.ObjectFromURL("http://api.new.livestream.com/accounts/" + id + "/events/" + str(eventId))
+    return eventObj["stream_info"]["m3u8_url"]
 ###################################################################################################
 def getLiveStreamEventId(events):
-	for event in events:
-		if event["short_name"] == "live":
-			return event["id"]
-	Log.Error("Cannot find a live event from the livestream JSON")
-	return ''
+    for event in events:
+        if event["short_name"] == "live":
+            return event["id"]
+    Log.Error("Cannot find a live event from the livestream JSON")
+    return ''
 ###################################################################################################
