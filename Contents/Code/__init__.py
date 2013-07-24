@@ -125,7 +125,7 @@ def getLiveStreamAPIURL(id):
     idObj = JSON.ObjectFromURL("http://api.new.livestream.com/accounts/" + id)
     events = idObj["upcoming_events"]["data"]
     eventId = getLiveStreamEventId(events)
-    Log.Info("******* ID = %s and EventID = %s",id,eventId)
+    Log.Debug("******* ID = %s and EventID = %s",id,eventId)
     eventObj = JSON.ObjectFromURL("http://api.new.livestream.com/accounts/" + id + "/events/" + str(eventId))
     return eventObj["stream_info"]["m3u8_url"]
 ###################################################################################################
